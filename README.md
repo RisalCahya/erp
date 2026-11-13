@@ -1,100 +1,203 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Production Planning & Material Requirement Planning Dashboard
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+A portfolio project that simulates ERP workflows for a fictional mineral water manufacturer. It demonstrates how product BOMs, material inventory, production plans, and production realizations work together in a small manufacturing application.
 
-## Demo lokal
+This project is a standalone simulation. It is not connected to a real company's ERP or production system.
 
-### Memisahkan database development dan demo
+## Features
 
-Database development yang sudah digunakan aplikasi tetap `erp`. Jangan ubah `.env` development yang ada. Untuk setup demo portfolio, `.env.example` menggunakan koneksi MySQL dengan database `erp_demo`; setelah meng-clone repository, salin `.env.example` ke `.env`, atur kredensial MySQL lokal, dan pastikan `APP_ENV=local`.
+- **Authentication** — session-based login and logout for application users.
+- **Dashboard** — database-backed summary of active products and materials, planned production, material shortages, upcoming plans, and recent realizations.
+- **Product Management** — create, view, update, search, and manage active products.
+- **Material Management** — create, view, update, search, and manage active materials.
+- **Bill of Materials (BOM)** — define the material quantities required for each product.
+- **Material Inventory** — view balances, receive materials, record stock adjustments, and configure reorder levels with stock movement history.
+- **Production Planning** — create production plans that retain a snapshot of the BOM used at planning time.
+- **Material Requirements Planning (MRP)** — aggregate material requirements for planned production and compare them with current stock to identify shortages.
+- **Production Realization** — create and post production realizations, recording material consumption and finished goods output.
+- **Finished Goods Inventory** — maintain finished goods balances and production output movement history.
 
-Buat database demo secara manual di phpMyAdmin:
+## Business Workflow
 
-1. Buka phpMyAdmin dan masuk ke server MySQL lokal.
-2. Pilih tab **Databases**.
-3. Isi nama database `erp_demo`.
-4. Pilih collation `utf8mb4_unicode_ci`, lalu klik **Create**.
-5. Pastikan `.env` pada salinan demo menunjuk ke `DB_CONNECTION=mysql` dan `DB_DATABASE=erp_demo`.
+```text
+Products → BOM → Material Inventory → Production Planning → MRP → Production Realization → Finished Goods Inventory
+```
 
-Jangan arahkan salinan development ke `erp_demo` atau salinan demo ke `erp`. Jalankan migration yang tersedia secara manual hanya setelah memeriksa koneksi aktif. Seeder tidak membuat database secara otomatis dan berhenti jika `APP_ENV` bukan `local` atau nama database koneksi aktif bukan `erp_demo`.
+Products and their BOMs define what can be manufactured. Each production plan stores a BOM snapshot, so later master-data changes do not silently alter an existing plan. MRP aggregates requirements from plans with a planned status and compares them with current inventory. Posting a production realization records material consumption and adds the output to finished goods inventory.
 
-### Menjalankan data simulasi
+## Application Screenshots
 
-Seeder demo ditujukan hanya untuk database lokal `erp_demo`. Sebelum menjalankannya, pastikan migration yang diperlukan sudah tersedia pada database demo.
+### Dashboard
+![Dashboard summary](docs/dashboard.png)
 
-Seeder memakai SKU dan nomor transaksi dengan awalan `DEMO-`. Jika salah satu identifier sudah dipakai data yang tidak cocok dengan identitas demo, seeding dibatalkan sebelum ada perubahan. Saldo/material existing dengan riwayat non-demo juga tidak digunakan atau diubah.
+### Product Management
+![Product management](docs/produk.png)
 
-Untuk membuat akun login demo, jalankan pada `APP_ENV=local` dan sediakan `DEMO_USER_PASSWORD` hanya di environment proses (jangan commit nilainya atau menaruhnya di dokumentasi). Tanpa password itu, data simulasi tetap dibuat tetapi akun demo dilewati dengan pesan yang jelas. Seeder tidak mengubah akun `demo@example.com` yang sudah ada.
+### Material Management
+![Material management](docs/material.png)
 
-Contoh PowerShell, dari terminal lokal tepercaya:
+### Bill of Materials
+![Bill of Materials](<docs/bill of materials.png>)
+
+### Production Planning
+![Production planning](<docs/rencana produksi.png>)
+
+### Material Requirements Planning
+![Material requirements planning](<docs/kebutuhan material.png>)
+
+## Technology Stack
+
+- PHP 8.2+
+- Laravel 12
+- MySQL
+- Blade templates
+- Tailwind CSS 4
+- Vite
+- PHPUnit
+
+## Installation
+
+### Requirements
+
+- PHP 8.2 or later with the required Laravel PHP extensions
+- Composer
+- MySQL or MariaDB
+- Node.js and npm
+
+### Set up a development database
+
+1. Clone the repository and install the PHP dependencies:
+
+   ```bash
+   composer install
+   ```
+
+2. Create a local environment file from the example:
+
+   ```bash
+   cp .env.example .env
+   ```
+
+   On Windows PowerShell, use:
+
+   ```powershell
+   Copy-Item .env.example .env
+   ```
+
+3. Create a MySQL database for development. The current `.env.example` uses `erp` as the database name. In phpMyAdmin, open **Databases**, enter `erp`, select the `utf8mb4_unicode_ci` collation, and create the database.
+
+4. Configure the database settings in your new `.env` file. For example:
+
+   ```dotenv
+   APP_ENV=local
+   DB_CONNECTION=mysql
+   DB_HOST=127.0.0.1
+   DB_PORT=3306
+   DB_DATABASE=erp
+   DB_USERNAME=root
+   DB_PASSWORD=
+   ```
+
+   Use the MySQL username and password configured on your machine. Never commit `.env`.
+
+5. Generate the application key:
+
+   ```bash
+   php artisan key:generate
+   ```
+
+6. Confirm that the connection is set to the intended development database before applying migrations. Then run:
+
+   ```bash
+   php artisan migrate
+   ```
+
+7. Install frontend dependencies and build the assets:
+
+   ```bash
+   npm install
+   npm run build
+   ```
+
+8. Start the Laravel development server:
+
+   ```bash
+   php artisan serve
+   ```
+
+   For frontend development with Vite, run `npm run dev` in a separate terminal.
+
+## Demo Database and Seeder
+
+Keep the development database (`erp`) separate from the portfolio demo database (`erp_demo`). The demo seeder does not create databases automatically. Create `erp_demo` manually in phpMyAdmin:
+
+1. Open phpMyAdmin and connect to your local MySQL or MariaDB server.
+2. Select **Databases**.
+3. Enter `erp_demo`, select the `utf8mb4_unicode_ci` collation, and click **Create**.
+4. Keep your development `.env` configured to use `erp`. For demo setup, temporarily select `erp_demo` for the current terminal process as described below.
+
+The demo seeder has safety guards: it only runs with `APP_ENV=local`, the MySQL driver, and the active database name `erp_demo`. It rejects `erp` and other databases before making changes. It also checks demo identifiers and existing demo stock history before writing. It does not delete data, reset inventory, or overwrite an existing account.
+
+Run the demo database migrations and seeder only after creating `erp_demo` and verifying the active connection. Open a dedicated PowerShell terminal for these commands. The environment-variable overrides below apply only to that terminal process; they do not edit `.env` or persist after the process ends. The script also restores any values that were already set in that terminal:
 
 ```powershell
-$secret = Read-Host "Password demo" -AsSecureString
-$pointer = [Runtime.InteropServices.Marshal]::SecureStringToBSTR($secret)
+$names = @("APP_ENV", "DB_CONNECTION", "DB_DATABASE", "DEMO_USER_PASSWORD")
+$previous = @{}
+foreach ($name in $names) {
+    $previous[$name] = [Environment]::GetEnvironmentVariable($name, "Process")
+}
+
+$pointer = [IntPtr]::Zero
 try {
+    $env:APP_ENV = "local"
+    $env:DB_CONNECTION = "mysql"
+    $env:DB_DATABASE = "erp_demo"
+
+    php artisan migrate
+    if ($LASTEXITCODE -ne 0) {
+        throw "Demo database migration failed; seeding was not started."
+    }
+
+    $secret = Read-Host "Demo account password" -AsSecureString
+    $pointer = [Runtime.InteropServices.Marshal]::SecureStringToBSTR($secret)
     $env:DEMO_USER_PASSWORD = [Runtime.InteropServices.Marshal]::PtrToStringBSTR($pointer)
+
     php artisan db:seed --class=DemoDataSeeder
+    if ($LASTEXITCODE -ne 0) {
+        throw "Demo seeding failed."
+    }
 } finally {
-    Remove-Item Env:DEMO_USER_PASSWORD -ErrorAction SilentlyContinue
-    [Runtime.InteropServices.Marshal]::ZeroFreeBSTR($pointer)
-    Remove-Variable secret, pointer
+    if ($pointer -ne [IntPtr]::Zero) {
+        [Runtime.InteropServices.Marshal]::ZeroFreeBSTR($pointer)
+    }
+    Remove-Variable secret, pointer -ErrorAction SilentlyContinue
+
+    foreach ($name in $names) {
+        if ($null -eq $previous[$name]) {
+            Remove-Item "Env:$name" -ErrorAction SilentlyContinue
+        } else {
+            Set-Item "Env:$name" $previous[$name]
+        }
+    }
 }
 ```
 
-Atau jalankan `php artisan db:seed` untuk memakai `DatabaseSeeder`. Seeder dapat dijalankan berulang kali dan tidak menghapus data. Ia membuat 4 produk, 10 material, 18 baris BOM, 10 saldo material beserta riwayat movement, 4 rencana beserta snapshot, dan 1 realisasi selesai beserta mutasi material dan barang jadi. Akun login yang dibuat memakai email `demo@example.com` dan password yang Anda sediakan melalui `DEMO_USER_PASSWORD`.
+The database host and credentials are still read from `.env`; only the process-level environment variables shown above override settings from that file for these Artisan commands. If you use another shell, apply equivalent temporary overrides and restore or clear them afterward.
 
-## About Laravel
+The demo data includes four fictional products, ten materials, BOMs, opening stock and stock movements, four production plans, and one completed production realization. A login account is created only when `APP_ENV=local` and `DEMO_USER_PASSWORD` is provided. Its email is `demo@example.com`; this project does not define or publish a default password. If the account already exists, the seeder leaves it unchanged.
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+Do not point the demo seeder at a development or production database. Do not commit `DEMO_USER_PASSWORD` or share it as a repository credential.
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## Automated Tests
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+Run the test suite with:
 
-## Learning Laravel
+```bash
+php artisan test
+```
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
+The PHPUnit configuration uses an in-memory SQLite database for automated tests; tests do not require the MySQL demo database.
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+## Disclaimer
 
-## Laravel Sponsors
-
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
-
-### Premium Partners
-
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
-
-## Contributing
-
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
-
-## Code of Conduct
-
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
-
-## Security Vulnerabilities
-
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
-
-## License
-
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+All products, materials, plans, stock balances, and transactions in this application are fictional sample data for demonstration and learning purposes. They do not represent a real manufacturer, business, or production record.
