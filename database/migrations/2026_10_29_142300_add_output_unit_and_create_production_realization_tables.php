@@ -19,7 +19,11 @@ return new class extends Migration
                 $table->id();
                 $table->string('transaction_number')->unique();
                 $table->date('transaction_date');
-                $table->foreignId('product_id')->constrained()->restrictOnDelete();
+                $table->foreignId('product_id');
+                $table->foreign('product_id', 'pr_product_fk')
+                    ->references('id')
+                    ->on('products')
+                    ->restrictOnDelete();
                 $table->decimal('finished_good_quantity', 14, 2);
                 $table->string('output_unit', 50);
                 $table->text('notes')->nullable();
@@ -34,8 +38,16 @@ return new class extends Migration
         if (! Schema::hasTable('production_realization_materials')) {
             Schema::create('production_realization_materials', function (Blueprint $table) {
                 $table->id();
-                $table->foreignId('production_realization_id')->constrained()->restrictOnDelete();
-                $table->foreignId('material_id')->constrained()->restrictOnDelete();
+                $table->foreignId('production_realization_id');
+                $table->foreign('production_realization_id', 'prm_realization_fk')
+                    ->references('id')
+                    ->on('production_realizations')
+                    ->restrictOnDelete();
+                $table->foreignId('material_id');
+                $table->foreign('material_id', 'prm_material_fk')
+                    ->references('id')
+                    ->on('materials')
+                    ->restrictOnDelete();
                 $table->decimal('quantity_per_output', 14, 2);
                 $table->decimal('required_quantity', 14, 2);
                 $table->timestamps();
@@ -47,7 +59,11 @@ return new class extends Migration
         if (! Schema::hasTable('finished_good_stocks')) {
             Schema::create('finished_good_stocks', function (Blueprint $table) {
                 $table->id();
-                $table->foreignId('product_id')->unique()->constrained()->restrictOnDelete();
+                $table->foreignId('product_id')->unique();
+                $table->foreign('product_id', 'fgs_product_fk')
+                    ->references('id')
+                    ->on('products')
+                    ->restrictOnDelete();
                 $table->string('unit', 50);
                 $table->decimal('on_hand', 14, 2)->default(0);
                 $table->timestamps();
@@ -57,8 +73,16 @@ return new class extends Migration
         if (! Schema::hasTable('finished_good_stock_movements')) {
             Schema::create('finished_good_stock_movements', function (Blueprint $table) {
                 $table->id();
-                $table->foreignId('product_id')->constrained()->restrictOnDelete();
-                $table->foreignId('production_realization_id')->unique()->constrained()->restrictOnDelete();
+                $table->foreignId('product_id');
+                $table->foreign('product_id', 'fgm_product_fk')
+                    ->references('id')
+                    ->on('products')
+                    ->restrictOnDelete();
+                $table->foreignId('production_realization_id')->unique();
+                $table->foreign('production_realization_id', 'fgm_realization_fk')
+                    ->references('id')
+                    ->on('production_realizations')
+                    ->restrictOnDelete();
                 $table->string('movement_type')->default('production_output');
                 $table->decimal('quantity', 14, 2);
                 $table->string('unit', 50);

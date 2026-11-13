@@ -7,6 +7,47 @@
 <a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
 </p>
 
+## Demo lokal
+
+### Memisahkan database development dan demo
+
+Database development yang sudah digunakan aplikasi tetap `erp`. Jangan ubah `.env` development yang ada. Untuk setup demo portfolio, `.env.example` menggunakan koneksi MySQL dengan database `erp_demo`; setelah meng-clone repository, salin `.env.example` ke `.env`, atur kredensial MySQL lokal, dan pastikan `APP_ENV=local`.
+
+Buat database demo secara manual di phpMyAdmin:
+
+1. Buka phpMyAdmin dan masuk ke server MySQL lokal.
+2. Pilih tab **Databases**.
+3. Isi nama database `erp_demo`.
+4. Pilih collation `utf8mb4_unicode_ci`, lalu klik **Create**.
+5. Pastikan `.env` pada salinan demo menunjuk ke `DB_CONNECTION=mysql` dan `DB_DATABASE=erp_demo`.
+
+Jangan arahkan salinan development ke `erp_demo` atau salinan demo ke `erp`. Jalankan migration yang tersedia secara manual hanya setelah memeriksa koneksi aktif. Seeder tidak membuat database secara otomatis dan berhenti jika `APP_ENV` bukan `local` atau nama database koneksi aktif bukan `erp_demo`.
+
+### Menjalankan data simulasi
+
+Seeder demo ditujukan hanya untuk database lokal `erp_demo`. Sebelum menjalankannya, pastikan migration yang diperlukan sudah tersedia pada database demo.
+
+Seeder memakai SKU dan nomor transaksi dengan awalan `DEMO-`. Jika salah satu identifier sudah dipakai data yang tidak cocok dengan identitas demo, seeding dibatalkan sebelum ada perubahan. Saldo/material existing dengan riwayat non-demo juga tidak digunakan atau diubah.
+
+Untuk membuat akun login demo, jalankan pada `APP_ENV=local` dan sediakan `DEMO_USER_PASSWORD` hanya di environment proses (jangan commit nilainya atau menaruhnya di dokumentasi). Tanpa password itu, data simulasi tetap dibuat tetapi akun demo dilewati dengan pesan yang jelas. Seeder tidak mengubah akun `demo@example.com` yang sudah ada.
+
+Contoh PowerShell, dari terminal lokal tepercaya:
+
+```powershell
+$secret = Read-Host "Password demo" -AsSecureString
+$pointer = [Runtime.InteropServices.Marshal]::SecureStringToBSTR($secret)
+try {
+    $env:DEMO_USER_PASSWORD = [Runtime.InteropServices.Marshal]::PtrToStringBSTR($pointer)
+    php artisan db:seed --class=DemoDataSeeder
+} finally {
+    Remove-Item Env:DEMO_USER_PASSWORD -ErrorAction SilentlyContinue
+    [Runtime.InteropServices.Marshal]::ZeroFreeBSTR($pointer)
+    Remove-Variable secret, pointer
+}
+```
+
+Atau jalankan `php artisan db:seed` untuk memakai `DatabaseSeeder`. Seeder dapat dijalankan berulang kali dan tidak menghapus data. Ia membuat 4 produk, 10 material, 18 baris BOM, 10 saldo material beserta riwayat movement, 4 rencana beserta snapshot, dan 1 realisasi selesai beserta mutasi material dan barang jadi. Akun login yang dibuat memakai email `demo@example.com` dan password yang Anda sediakan melalui `DEMO_USER_PASSWORD`.
+
 ## About Laravel
 
 Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:

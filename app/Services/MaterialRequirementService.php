@@ -20,9 +20,9 @@ class MaterialRequirementService
 
     private const MAX_QUANTITY_UNITS = 99_999_999_999_999;
 
-    public function createPlannedPlan(array $attributes): ProductionPlan
+    public function createPlannedPlan(array $attributes, ?string $planNumber = null): ProductionPlan
     {
-        return DB::transaction(function () use ($attributes): ProductionPlan {
+        return DB::transaction(function () use ($attributes, $planNumber): ProductionPlan {
             $product = Product::query()
                 ->whereKey($attributes['product_id'])
                 ->where('is_active', true)
@@ -50,7 +50,7 @@ class MaterialRequirementService
             $plannedQuantity = (string) $attributes['planned_quantity'];
             $plannedUnits = $this->toUnits($plannedQuantity, 2);
             $plan = ProductionPlan::create([
-                'plan_number' => $this->generatePlanNumber(),
+                'plan_number' => $planNumber ?? $this->generatePlanNumber(),
                 'product_id' => $product->id,
                 'planned_quantity' => $plannedQuantity,
                 'due_date' => $attributes['due_date'],

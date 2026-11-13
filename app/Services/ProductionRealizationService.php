@@ -20,9 +20,9 @@ class ProductionRealizationService
 
     private const MAX_QUANTITY_UNITS = 99_999_999_999_999;
 
-    public function createDraft(array $attributes): ProductionRealization
+    public function createDraft(array $attributes, ?string $transactionNumber = null): ProductionRealization
     {
-        return DB::transaction(function () use ($attributes): ProductionRealization {
+        return DB::transaction(function () use ($attributes, $transactionNumber): ProductionRealization {
             $product = Product::query()
                 ->whereKey($attributes['product_id'])
                 ->where('is_active', true)
@@ -44,7 +44,7 @@ class ProductionRealizationService
             $bomItems = $this->bomFor($product);
             $quantityUnits = $this->toUnits((string) $attributes['finished_good_quantity']);
             $realization = ProductionRealization::create([
-                'transaction_number' => $this->generateTransactionNumber(),
+                'transaction_number' => $transactionNumber ?? $this->generateTransactionNumber(),
                 'transaction_date' => $attributes['transaction_date'],
                 'product_id' => $product->id,
                 'finished_good_quantity' => $this->fromUnits($quantityUnits),
