@@ -127,67 +127,6 @@ Products and their BOMs define what can be manufactured. Each production plan st
 
    For frontend development with Vite, run `npm run dev` in a separate terminal.
 
-## Demo Database and Seeder
-
-Keep the development database (`erp`) separate from the portfolio demo database (`erp_demo`). The demo seeder does not create databases automatically. Create `erp_demo` manually in phpMyAdmin:
-
-1. Open phpMyAdmin and connect to your local MySQL or MariaDB server.
-2. Select **Databases**.
-3. Enter `erp_demo`, select the `utf8mb4_unicode_ci` collation, and click **Create**.
-4. Keep your development `.env` configured to use `erp`. For demo setup, temporarily select `erp_demo` for the current terminal process as described below.
-
-The demo seeder has safety guards: it only runs with `APP_ENV=local`, the MySQL driver, and the active database name `erp_demo`. It rejects `erp` and other databases before making changes. It also checks demo identifiers and existing demo stock history before writing. It does not delete data, reset inventory, or overwrite an existing account.
-
-Run the demo database migrations and seeder only after creating `erp_demo` and verifying the active connection. Open a dedicated PowerShell terminal for these commands. The environment-variable overrides below apply only to that terminal process; they do not edit `.env` or persist after the process ends. The script also restores any values that were already set in that terminal:
-
-```powershell
-$names = @("APP_ENV", "DB_CONNECTION", "DB_DATABASE", "DEMO_USER_PASSWORD")
-$previous = @{}
-foreach ($name in $names) {
-    $previous[$name] = [Environment]::GetEnvironmentVariable($name, "Process")
-}
-
-$pointer = [IntPtr]::Zero
-try {
-    $env:APP_ENV = "local"
-    $env:DB_CONNECTION = "mysql"
-    $env:DB_DATABASE = "erp_demo"
-
-    php artisan migrate
-    if ($LASTEXITCODE -ne 0) {
-        throw "Demo database migration failed; seeding was not started."
-    }
-
-    $secret = Read-Host "Demo account password" -AsSecureString
-    $pointer = [Runtime.InteropServices.Marshal]::SecureStringToBSTR($secret)
-    $env:DEMO_USER_PASSWORD = [Runtime.InteropServices.Marshal]::PtrToStringBSTR($pointer)
-
-    php artisan db:seed --class=DemoDataSeeder
-    if ($LASTEXITCODE -ne 0) {
-        throw "Demo seeding failed."
-    }
-} finally {
-    if ($pointer -ne [IntPtr]::Zero) {
-        [Runtime.InteropServices.Marshal]::ZeroFreeBSTR($pointer)
-    }
-    Remove-Variable secret, pointer -ErrorAction SilentlyContinue
-
-    foreach ($name in $names) {
-        if ($null -eq $previous[$name]) {
-            Remove-Item "Env:$name" -ErrorAction SilentlyContinue
-        } else {
-            Set-Item "Env:$name" $previous[$name]
-        }
-    }
-}
-```
-
-The database host and credentials are still read from `.env`; only the process-level environment variables shown above override settings from that file for these Artisan commands. If you use another shell, apply equivalent temporary overrides and restore or clear them afterward.
-
-The demo data includes four fictional products, ten materials, BOMs, opening stock and stock movements, four production plans, and one completed production realization. A login account is created only when `APP_ENV=local` and `DEMO_USER_PASSWORD` is provided. Its email is `demo@example.com`; this project does not define or publish a default password. If the account already exists, the seeder leaves it unchanged.
-
-Do not point the demo seeder at a development or production database. Do not commit `DEMO_USER_PASSWORD` or share it as a repository credential.
-
 ## Automated Tests
 
 Run the test suite with:
@@ -196,7 +135,7 @@ Run the test suite with:
 php artisan test
 ```
 
-The PHPUnit configuration uses an in-memory SQLite database for automated tests; tests do not require the MySQL demo database.
+The PHPUnit configuration uses an in-memory SQLite database for automated tests; a MySQL database is not required to run the test suite.
 
 ## Disclaimer
 
